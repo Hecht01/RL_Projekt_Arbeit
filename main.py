@@ -78,8 +78,8 @@ def optimize_for_mazewater2(num_trials: int = 50) -> Dict:
         env=env,
         agent_types=agent_types,
         n_trials=num_trials,
-        num_runs=5,
-        episodes=600,
+        num_runs=15,
+        episodes=500,
         optimization_metric='combined'
     )
 
