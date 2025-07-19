@@ -17,6 +17,8 @@ class RLAgent:
         self.epsilon_min = epsilon_min
         self.Q = np.zeros((env.num_states(), env.num_actions()))
         self.episode_rewards = []
+        self.state_visits = np.zeros(env.num_states())
+        self.state_action_visits = np.ones((env.num_states(), env.num_actions()))
         self.name = self.__class__.__name__
 
     def update(self, state: int, action: int, reward: float,
@@ -25,10 +27,17 @@ class RLAgent:
         pass
 
     def get_action(self, state: int, greedy: bool = False) -> int:
-        """Epsilon-greedy action selection"""
-        if greedy or np.random.random() >= self.epsilon:
-            return np.argmax(self.Q[state])
-        return np.random.randint(self.env.num_actions())
+        """UCB action selection"""
+        c = 2.0  # exploration constant
+
+        # Ensure counts are safe
+        total_visits = max(self.state_visits[state], 1)  # avoids log(0)
+        action_visits = self.state_action_visits[state].copy()
+        action_visits[action_visits < 1e-5] = 1e-5  # avoid division by 0
+
+        # Compute UCB values
+        ucb_values = self.Q[state] + c * np.sqrt(np.log(total_visits) / action_visits)
+        return np.argmax(ucb_values)
 
     def decay_epsilon(self):
         """Decay epsilon after each episode"""
@@ -40,6 +49,7 @@ class RLAgent:
 
         for episode in range(episodes):
             state = self.env.reset()
+
             cumulative_reward = 0
             action = self.get_action(state)  # For SARSA
 
@@ -50,7 +60,8 @@ class RLAgent:
                 if done:
                     self.update(state, action, reward, next_state, done=True)
                     break
-
+                self.state_visits[state] += 1
+                self.state_action_visits[state, action] += 1
                 next_action = self.get_action(next_state)
                 self.update(state, action, reward, next_state, next_action)
 
