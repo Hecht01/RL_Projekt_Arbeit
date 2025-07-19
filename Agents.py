@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple, Optional
-import random
-from collections import defaultdict
+
 
 
 class RLAgent:
@@ -228,7 +227,7 @@ class ValueIterationAgent(RLAgent):
 
     def update(self, state: int, action: int, reward: float,
                next_state: int, next_action: int = None, done: bool = False):
-        pass  # VI doesn't need online updates
+        pass  # VI doesn't need runtime updates
 
 
 class RLAgentFactory:
@@ -378,9 +377,7 @@ def plot_single_agent_convergence(results: Dict, agent_type: str,
 
 def print_performance_summary(results: Dict):
     """Print performance summary for all agents"""
-    print("\n" + "=" * 60)
     print("PERFORMANCE SUMMARY")
-    print("=" * 60)
 
     # Sort by final performance
     sorted_agents = sorted(results.items(),

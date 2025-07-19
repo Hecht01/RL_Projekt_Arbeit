@@ -1,24 +1,11 @@
-#!/usr/bin/env python3
-"""
-Main script for Task 1: Reinforcement Learning in Gridworld Environments
-
-This script:
-1. Solves the MazeWater2 environment using optimized hyperparameters
-2. Creates a custom challenging environment (SpiralMaze)
-3. Plots results focusing on convergence episodes
-4. Compares different RL algorithms
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple
 import random
-from collections import defaultdict
 
-# Import our modules
 from gridworld import MazeWater2, GridworldEnv
 from Agents import RLAgentFactory, compare_agents, plot_comparison, print_performance_summary
-from optimizer import OptunaOptimizer, optimize_multiple_agents, print_optimization_summary
+from optimizer import OptunaOptimizer,optimize_multiple_agents, print_optimization_summary
 from plot import plot_q_table, plot_v_table
 
 
@@ -39,7 +26,6 @@ class SpiralMaze(GridworldEnv):
         self.g_reward = 100
         self.o_reward = -50
 
-        # Create a 15x15 spiral maze with strategic water placement
         self.grid = [
             ['S', ' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'],
             [' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'],
@@ -65,9 +51,7 @@ def optimize_for_mazewater2(num_trials: int = 50) -> Dict:
     """
     Optimize hyperparameters specifically for MazeWater2 environment
     """
-    print("=" * 60)
     print("OPTIMIZING HYPERPARAMETERS FOR MAZEWATER2")
-    print("=" * 60)
 
     env = MazeWater2()
 
@@ -77,10 +61,7 @@ def optimize_for_mazewater2(num_trials: int = 50) -> Dict:
     results = optimize_multiple_agents(
         env=env,
         agent_types=agent_types,
-        n_trials=num_trials,
-        num_runs=10,
-        episodes=1500,
-        optimization_metric='combined'
+        n_trials=num_trials
     )
 
     print_optimization_summary(results)
@@ -91,9 +72,7 @@ def solve_mazewater2_with_best_params(optimization_results: Dict) -> Dict:
     """
     Solve MazeWater2 using the best parameters found through optimization
     """
-    print("\n" + "=" * 60)
     print("SOLVING MAZEWATER2 WITH OPTIMIZED PARAMETERS")
-    print("=" * 60)
 
     env = MazeWater2()
 
@@ -141,9 +120,7 @@ def solve_custom_environment() -> Dict:
     """
     Solve the custom SpiralMaze environment
     """
-    print("\n" + "=" * 60)
     print("SOLVING CUSTOM SPIRAL MAZE ENVIRONMENT")
-    print("=" * 60)
 
     env = SpiralMaze()
 
@@ -153,8 +130,7 @@ def solve_custom_environment() -> Dict:
         env=env,
         agent_type='qlearning',
         num_runs=3,
-        episodes=1000,
-        optimization_metric='combined'
+        max_episodes=1000,
     )
 
     opt_result = optimizer.optimize(n_trials=30)
@@ -315,9 +291,7 @@ def print_detailed_results(results: Dict, env_name: str):
     """
     Print detailed results for the environment
     """
-    print(f"\n{'=' * 60}")
     print(f"DETAILED RESULTS FOR {env_name.upper()}")
-    print(f"{'=' * 60}")
 
     sorted_agents = sorted(results.items(),
                            key=lambda x: x[1]['final_performance'],
@@ -338,50 +312,30 @@ def main():
     """
     Main function that runs all required tasks
     """
-    print("REINFORCEMENT LEARNING TASK 1")
-    print("=" * 60)
-    print("1. Optimizing hyperparameters for MazeWater2")
-    print("2. Solving MazeWater2 with optimized parameters")
-    print("3. Creating and solving custom SpiralMaze environment")
-    print("4. Generating focused convergence plots")
-    print("=" * 60)
 
-    # Set random seeds for reproducibility
     np.random.seed(42)
     random.seed(42)
 
-    # Step 1: Optimize hyperparameters for MazeWater2
     optimization_results = optimize_for_mazewater2(num_trials=30)
 
-    # Step 2: Solve MazeWater2 with optimized parameters
     mazewater2_results = solve_mazewater2_with_best_params(optimization_results)
 
-    # Step 3: Solve custom environment
     spiralmaze_results = solve_custom_environment()
 
-    # Step 4: Generate plots
-    print("\n" + "=" * 60)
     print("GENERATING PLOTS")
-    print("=" * 60)
 
-    # Plot MazeWater2 results
     print("Plotting MazeWater2 results...")
     plot_convergence_focused(mazewater2_results, "MazeWater2", focus_window=200)
     plot_full_training(mazewater2_results, "MazeWater2")
 
-    # Plot SpiralMaze results
     print("Plotting SpiralMaze results...")
     plot_convergence_focused(spiralmaze_results, "SpiralMaze", focus_window=300)
     plot_full_training(spiralmaze_results, "SpiralMaze")
 
-    # Step 5: Print detailed results
     print_detailed_results(mazewater2_results, "MazeWater2")
     print_detailed_results(spiralmaze_results, "SpiralMaze")
 
-    # Step 6: Visualize learned policies
-    print("\n" + "=" * 60)
     print("VISUALIZING LEARNED POLICIES")
-    print("=" * 60)
 
     # Get best parameters for visualization
     best_agent_type = max(optimization_results.keys(),
@@ -396,16 +350,13 @@ def main():
     print("Visualizing SpiralMaze policy...")
     visualize_learned_policy(SpiralMaze(), 'qlearning', {'alpha': 0.1, 'gamma': 0.95, 'epsilon': 0.1})
 
-    print("\n" + "=" * 60)
-    print("TASK 1 COMPLETED SUCCESSFULLY!")
-    print("=" * 60)
+
     print("Summary:")
-    print(f"- MazeWater2 best agent: {best_agent_type}")
-    print(f"- MazeWater2 best final score: {mazewater2_results[best_agent_type]['final_performance']:.1f}")
-    print(
-        f"- SpiralMaze best final score: {max(spiralmaze_results.values(), key=lambda x: x['final_performance'])['final_performance']:.1f}")
-    print("- All plots have been generated")
-    print("- Learned policies have been visualized")
+    print(f"MazeWater2 best agent: {best_agent_type}")
+    print(f"MazeWater2 best final score: {mazewater2_results[best_agent_type]['final_performance']:.1f}")
+    print(f"SpiralMaze best final score: {max(spiralmaze_results.values(), key=lambda x: x['final_performance'])['final_performance']:.1f}")
+    print("All plots have been generated")
+    print("Learned policies have been visualized")
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ def optimize_for_fastest_convergence(env, agent_type: str, n_trials: int = 50) -
     return optimizer.optimize(n_trials)
 
 
-def optimize_multiple_agents_minimal(env, agent_types: List[str], n_trials: int = 30) -> Dict[str, Dict]:
+def optimize_multiple_agents(env, agent_types: List[str], n_trials: int = 30) -> Dict[str, Dict]:
     """Optimize multiple agents for fastest convergence"""
     results = {}
 
@@ -85,3 +85,43 @@ def optimize_multiple_agents_minimal(env, agent_types: List[str], n_trials: int 
         print(f"Best convergence: {result['convergence_episodes']:.1f} episodes")
 
     return results
+
+
+def print_optimization_summary(optimization_results: Dict[str, Dict]):
+    """Print summary of optimization results"""
+    print("\n" + "=" * 80)
+    print("OPTIMIZATION SUMMARY")
+    print("=" * 80)
+
+    sorted_results = sorted(
+        optimization_results.items(),
+        key=lambda x: x[1]['best_score'],
+        reverse=True
+    )
+
+    print(f"{'Agent':<20} {'Best Score':<15} {'Best Parameters'}")
+    print("-" * 80)
+
+    for agent_type, result in sorted_results:
+        best_score = result['best_score']
+        best_params = result['best_params']
+
+        # Format parameters for display
+        params_str = ", ".join([f"{k}={v:.4f}" for k, v in best_params.items()])
+
+        print(f"{agent_type:<20} {best_score:<15.4f} {params_str}")
+
+
+def quick_optimize_for_mazewater2(env, agent_type: str = 'qlearning',
+                                  n_trials: int = 30) -> Dict[str, Any]:
+    """Quick optimization specifically for MazeWater2 environment"""
+    print(f"Quick optimization for {agent_type} on MazeWater2...")
+
+    optimizer = OptunaOptimizer(
+        env=env,
+        agent_type=agent_type,
+        num_runs=5
+    )
+
+    return optimizer.optimize(n_trials=n_trials)
+
