@@ -64,6 +64,7 @@ class OptunaOptimizer:
 
         return {
             'best_params': study.best_params,
+            'best_score': study.best_value,  # Added this line
             'convergence_episodes': -study.best_value
         }
 
@@ -99,17 +100,18 @@ def print_optimization_summary(optimization_results: Dict[str, Dict]):
         reverse=True
     )
 
-    print(f"{'Agent':<20} {'Best Score':<15} {'Best Parameters'}")
-    print("-" * 80)
+    print(f"{'Agent':<20} {'Best Score':<15} {'Convergence Episodes':<20} {'Best Parameters'}")
+    print("-" * 100)
 
     for agent_type, result in sorted_results:
         best_score = result['best_score']
+        convergence_episodes = result['convergence_episodes']
         best_params = result['best_params']
 
         # Format parameters for display
         params_str = ", ".join([f"{k}={v:.4f}" for k, v in best_params.items()])
 
-        print(f"{agent_type:<20} {best_score:<15.4f} {params_str}")
+        print(f"{agent_type:<20} {best_score:<15.4f} {convergence_episodes:<20.1f} {params_str}")
 
 
 def quick_optimize_for_mazewater2(env, agent_type: str = 'qlearning',
@@ -124,4 +126,3 @@ def quick_optimize_for_mazewater2(env, agent_type: str = 'qlearning',
     )
 
     return optimizer.optimize(n_trials=n_trials)
-

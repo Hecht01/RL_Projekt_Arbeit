@@ -136,109 +136,43 @@ class ExpectedSARSAAgent(RLAgent):
 
 
 class DoubleQLearningAgent(RLAgent):
-    """Double Q-Learning implementation"""
+    """Double Q-Learning implementation - FIXED VERSION"""
 
     def __init__(self, env, **kwargs):
         super().__init__(env, **kwargs)
         self.Q1 = np.zeros((env.num_states(), env.num_actions()))
         self.Q2 = np.zeros((env.num_states(), env.num_actions()))
-        self.Q = self.Q1 + self.Q2  # For action selection
+        # Use average of both Q-tables for action selection
+        self.Q = (self.Q1 + self.Q2) / 2
 
     def update(self, state: int, action: int, reward: float,
                next_state: int, next_action: int = None, done: bool = False):
-        if done:
-            target = reward
-        else:
-            if np.random.random() < 0.5:
-                # Update Q1 using Q2
+
+        # Randomly choose which Q-table to update
+        if np.random.random() < 0.5:
+            # Update Q1 using Q2 for evaluation
+            if done:
+                target = reward
+            else:
+                # Use Q1 to select action, Q2 to evaluate it
                 best_action = np.argmax(self.Q1[next_state])
                 target = reward + self.gamma * self.Q2[next_state, best_action]
-                self.Q1[state, action] += self.alpha * (target - self.Q1[state, action])
+
+            self.Q1[state, action] += self.alpha * (target - self.Q1[state, action])
+        else:
+            # Update Q2 using Q1 for evaluation
+            if done:
+                target = reward
             else:
-                # Update Q2 using Q1
+                # Use Q2 to select action, Q1 to evaluate it
                 best_action = np.argmax(self.Q2[next_state])
                 target = reward + self.gamma * self.Q1[next_state, best_action]
-                self.Q2[state, action] += self.alpha * (target - self.Q2[state, action])
 
-        self.Q = self.Q1 + self.Q2  # Update combined Q for action selection
+            self.Q2[state, action] += self.alpha * (target - self.Q2[state, action])
 
+        # Update combined Q-table for action selection
+        self.Q = (self.Q1 + self.Q2) / 2
 
-class ValueIterationAgent(RLAgent):
-    """Value Iteration implementation (model-based)"""
-
-    def __init__(self, env, **kwargs):
-        super().__init__(env, **kwargs)
-        self.V = np.zeros(env.num_states())
-        self.build_model()
-
-    def build_model(self):
-        n_states = self.env.num_states()
-        n_actions = self.env.num_actions()
-
-        self.transitions = np.zeros((n_states, n_actions, n_states))
-        self.rewards = np.zeros((n_states, n_actions))
-
-        for s in range(n_states):
-            for a in range(n_actions):
-                next_s, reward, done = self.env.step_dp(s, a)
-                self.transitions[s, a, next_s] = 1.0
-                self.rewards[s, a] = reward
-
-    def value_iteration(self, theta: float = 1e-6, max_iterations: int = 1000):
-        """Perform value iteration"""
-        for i in range(max_iterations):
-            delta = 0
-            new_V = np.zeros_like(self.V)
-
-            for s in range(self.env.num_states()):
-                v = self.V[s]
-                action_values = []
-
-                for a in range(self.env.num_actions()):
-                    action_value = self.rewards[s, a] + self.gamma * np.sum(
-                        self.transitions[s, a] * self.V
-                    )
-                    action_values.append(action_value)
-
-                new_V[s] = max(action_values)
-                delta = max(delta, abs(v - new_V[s]))
-
-            self.V = new_V
-            if delta < theta:
-                break
-
-        # Extract Q-values and policy
-        for s in range(self.env.num_states()):
-            for a in range(self.env.num_actions()):
-                self.Q[s, a] = self.rewards[s, a] + self.gamma * np.sum(
-                    self.transitions[s, a] * self.V
-                )
-
-    def train(self, episodes: int = 1000, verbose: bool = False) -> List[float]:
-        self.value_iteration()
-
-        # Test the learned policy
-        self.episode_rewards = []
-        for _ in range(episodes):
-            state = self.env.reset()
-            cumulative_reward = 0
-
-            while True:
-                action = self.get_action(state, greedy=True)
-                next_state, reward, done = self.env.step(action)
-                cumulative_reward += reward
-
-                if done:
-                    break
-                state = next_state
-
-            self.episode_rewards.append(cumulative_reward)
-
-        return self.episode_rewards
-
-    def update(self, state: int, action: int, reward: float,
-               next_state: int, next_action: int = None, done: bool = False):
-        pass  # VI doesn't need runtime updates
 
 
 class RLAgentFactory:
@@ -248,8 +182,7 @@ class RLAgentFactory:
         'qlearning': QLearningAgent,
         'sarsa': SARSAAgent,
         'expected_sarsa': ExpectedSARSAAgent,
-        'double_qlearning': DoubleQLearningAgent,
-        'value_iteration': ValueIterationAgent,
+        'double_qlearning': DoubleQLearningAgent
     }
 
     @classmethod

@@ -310,7 +310,6 @@ class MazeWall(GridworldEnv):
 
 
 class EmptyWorldNN(GridworldEnv):
-    # create an empty quadratic grid with the start in one corner and the goal in the opposite corner
     def __init__(self, size=10):
         self.step_cost = 0
         self.g_reward = 100
