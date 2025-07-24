@@ -30,16 +30,16 @@ class CarRacingEnvironment:
     """Wrapper for CarRacing environment"""
 
     def __init__(self):
-        self.env = gym.make('CarRacing-v2', render_mode=None)
+        self.env = gym.make('CarRacing-v3', render_mode=None, continuous=False)
         self.preprocessor = CarRacingPreprocessor()
 
         # Define discrete actions
         self.actions = [
-            [-1.0, 0.0, 0.0],  # Left
-            [1.0, 0.0, 0.0],  # Right
-            [0.0, 1.0, 0.0],  # Accelerate
-            [0.0, 0.0, 0.8],  # Brake
-            [0.0, 0.0, 0.0]  # Do nothing
+            0,  # Do nothing
+            1,  # Right
+            2,  # Left
+            3,  # Accelerate
+            4,  # Brake
         ]
 
         self.frame_stack = 4
@@ -62,9 +62,17 @@ class CarRacingEnvironment:
         processed_obs = self.preprocessor.preprocess(obs)
         self.frames.append(processed_obs)
 
+        """
         # Reward shaping
-        if reward < 0:  # Negative reward (off track)
-            reward = -1
+        if reward < -10:  # Only penalize major off-track events
+            reward = -10
+        elif reward < 0:  # Normal frame penalty, keep it but maybe scale
+            reward = reward * 0.5
+
+            # Add small positive reward for staying on track
+        if reward >= 0:
+            reward = reward + 0.1
+        """
 
         done = terminated or truncated
         return np.array(self.frames), reward, done, info

@@ -88,11 +88,10 @@ def objective(trial):
         'epsilon': trial.suggest_float('epsilon', 0.8, 1.0),
         'epsilon_min': trial.suggest_float('epsilon_min', 0.01, 0.1),
         'epsilon_decay': trial.suggest_float('epsilon_decay', 0.99, 0.999),
-        'memory_size': trial.suggest_int('memory_size', 50000, 200000),
-        'batch_size': trial.suggest_categorical('batch_size', [32, 64, 128]),
+        'memory_size': trial.suggest_int('memory_size', 20000, 50000),
+        'batch_size': trial.suggest_categorical('batch_size', [16,32]),
         'target_update': trial.suggest_int('target_update', 500, 2000),
-        'hidden_size': trial.suggest_categorical('hidden_size', [256, 512, 1024]),
-        'episodes': 500
+        'hidden_size': trial.suggest_categorical('hidden_size', [256, 512, 1024])
     }
 
     scores, agent, best_avg_score = train_agent(config, trial)
@@ -150,7 +149,7 @@ def plot_results(all_scores, save_path='training_results.png'):
 
     plt.xlabel('Episode')
     plt.ylabel('Cumulative Reward')
-    plt.title('CarRacing-v2 Training Results (DQN)')
+    plt.title('CarRacing-v3 Training Results (DQN)')
     plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()

@@ -52,19 +52,31 @@ class DQN(nn.Module):
 
 
 class ReplayBuffer:
-    """Experience replay buffer"""
-
     def __init__(self, capacity):
-        self.buffer = deque(maxlen=capacity)
+        self.capacity = capacity
+        self.buffer = []
+        self.position = 0
 
     def push(self, state, action, reward, next_state, done):
-        self.buffer.append((state, action, reward, next_state, done))
+        if len(self.buffer) < self.capacity:
+            self.buffer.append(None)
+
+        # Store as uint8 to save memory, convert back when sampling
+        state_uint8 = (state * 255).astype(np.uint8)
+        next_state_uint8 = (next_state * 255).astype(np.uint8)
+
+        self.buffer[self.position] = (state_uint8, action, reward, next_state_uint8, done)
+        self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):
         batch = random.sample(self.buffer, batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)
-        return (np.array(states), np.array(actions), np.array(rewards),
-                np.array(next_states), np.array(dones))
+
+        # Convert back to float32
+        states = np.array(states, dtype=np.float32) / 255.0
+        next_states = np.array(next_states, dtype=np.float32) / 255.0
+
+        return (states, np.array(actions), np.array(rewards), next_states, np.array(dones))
 
     def __len__(self):
         return len(self.buffer)
